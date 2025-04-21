@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Ball</title>
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #F6FCFA;
+          color: #01377D;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          overflow: hidden;
+        }
+        canvas {
+          border: 2px solid #01377D;
+          background-color: #ffffff;
+        }
+        .score {
+          position: absolute;
+          top: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+        .game-over {
+          display: none;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          background-color: #ffffff;
+          border: 2px solid #01377D;
+          padding: 20px;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .game-over button {
+          margin-top: 10px;
+          padding: 10px 20px;
+          background-color: #01377D;
+          color: #ffffff;
+          border: none;
+          border-radius: 8px;
+          font-size: 1rem;
+          cursor: pointer;
+        }
+        .game-over button:hover {
+          background-color: #0255A6;
+        }
+    </style>
+</head>
+<body>
+<div class="score">Score: <span id="score">0</span></div>
+<canvas id="gameCanvas" width="300" height="500"></canvas>
+<div class="game-over">
+    <h2>Game Over</h2>
+    <p>Your Score: <span id="finalScore">0</span></p>
+    <button onclick="restartGame()">Restart</button>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+    const gameOverElement = document.querySelector('.game-over');
+    const finalScoreElement = document.getElementById('finalScore');
+    let score = 0;
+    let gameRunning = true;
+
+    const basket = {
+      x: canvas.width / 2 - 40,
+      y: canvas.height - 30,
+      width: 80,
+      height: 20,
+      speed: 5,
+    };
+
+    const ball = {
+      x: Math.random() * canvas.width,
+      y: 0,
+      radius: 10,
+      speed: 3,
+    };
+
+    function drawBasket() {
+      ctx.fillStyle = '#01377D';
+      ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#FF5733';
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function update() {
+      if (!gameRunning) return;
+
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Move ball
+      ball.y += ball.speed;
+
+      // Ball and basket collision detection
+      if (
+        ball.y + ball.radius > basket.y &&
+        ball.x > basket.x &&
+        ball.x < basket.x + basket.width
+      ) {
+        score++;
+        scoreElement.textContent = score;
+        resetBall();
+      }
+
+      // Ball hits the ground
+      if (ball.y > canvas.height) {
+        endGame();
+      }
+
+      // Draw everything
+      drawBasket();
+      drawBall();
+
+      // Loop
+      requestAnimationFrame(update);
+    }
+
+    function resetBall() {
+      ball.x = Math.random() * canvas.width;
+      ball.y = 0;
+      ball.speed += 0.2; // Increase speed slightly
+    }
+
+    function endGame() {
+      gameRunning = false;
+      gameOverElement.style.display = 'block';
+      finalScoreElement.textContent = score;
+    }
+
+    function restartGame() {
+      score = 0;
+      scoreElement.textContent = score;
+      ball.speed = 3;
+      resetBall();
+      gameRunning = true;
+      gameOverElement.style.display = 'none';
+      update();
+    }
+
+    // Touch control for basket
+    canvas.addEventListener('touchmove', (e) => {
+      const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+      basket.x = touchX - basket.width / 2;
+
+      // Prevent basket from going off the canvas
+      if (basket.x < 0) basket.x = 0;
+      if (basket.x + basket.width > canvas.width) basket.x = canvas.width - basket.width;
+    });
+
+    // Start the game loop
+    update();
+</script>
+</body>
+</html>
